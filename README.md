@@ -25,7 +25,8 @@ dashboards/
 └── grain/       platform services: as400proxy, restapi, services
 ```
 
-Each subfolder becomes a Grafana folder. Adding, moving or renaming dashboards needs no change in the `commons` chart.
+Each subfolder becomes a Grafana folder. Every subfolder must contain a `_folder.json` with a stable folder UID
+(`metadata.name`, never change it) and the folder title shown in Grafana (`spec.title`). Adding, moving or renaming dashboards needs no change in the `commons` chart.
 
 Alert rules still live in the `commons` chart of [smeup/helm-charts](https://github.com/smeup/helm-charts)
 (`charts/commons/alerts/`), because Git Sync supports only dashboards and folders for now.
