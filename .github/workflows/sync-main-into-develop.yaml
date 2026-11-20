@@ -1,0 +1,57 @@
+name: sync-main-into-develop
+
+# After a release is merged into main, open a PR main -> develop so develop keeps main as an ancestor.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Open Sync PR main -> develop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # A PAT is needed so the required checks run on the sync PR (PRs opened by GITHUB_TOKEN trigger no workflows)
+          token: ${{ secrets.ROBBY_SMEUP_PAT || github.token }}
+
+      - name: Create sync PR if missing
+        env:
+          GH_TOKEN: ${{ secrets.ROBBY_SMEUP_PAT || github.token }}
+          SYNC_BRANCH: sync/main-into-develop
+        run: |
+          set -euo pipefail
+
+          EXISTING_PR=$(gh pr list --base develop --head "$SYNC_BRANCH" --state open --json number --jq '.[0].number')
+          if [[ -n "${EXISTING_PR:-}" ]]; then
+            echo "An open sync PR main -> develop already exists: #$EXISTING_PR"
+            exit 0
+          fi
+
+          git fetch origin main develop
+          if git merge-base --is-ancestor origin/main origin/develop; then
+            echo "develop already contains main, nothing to sync"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # The head is a dedicated branch (not main) so conflicts are never resolved on main.
+          git checkout -B "$SYNC_BRANCH" origin/develop
+          if ! git merge origin/main -X theirs --no-edit -m "chore: sync main into develop"; then
+            echo "::error::Automatic merge of main into develop failed. Merge main into develop manually using a merge commit."
+            exit 1
+          fi
+          git push --force origin "$SYNC_BRANCH"
+
+          gh pr create \
+            --base develop \
+            --head "$SYNC_BRANCH" \
+            --title "chore: sync main into develop" \
+            --body $'## Automated Sync\n\nKeeps develop aligned with main after a release.\n\n**Merge this PR using a merge commit (not squash, not rebase)**, otherwise main and develop histories diverge again.'

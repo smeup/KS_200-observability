@@ -1,0 +1,26 @@
+name: validate
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  dashboards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check dashboards are valid JSON with a unique identifier
+        run: |
+          set -eu
+          ids=""
+          for f in dashboards/*.json; do
+            jq empty "$f" || { echo "::error file=$f::invalid JSON"; exit 1; }
+            # v2 resources are identified by metadata.name, classic dashboards by uid
+            id=$(jq -r '.metadata.name // .uid // empty' "$f")
+            [ -n "$id" ] || { echo "::error file=$f::missing uid / metadata.name"; exit 1; }
+            ids="$ids$id\n"
+          done
+          dup=$(printf "$ids" | sort | uniq -d)
+          [ -z "$dup" ] || { echo "::error::duplicate dashboard identifiers: $dup"; exit 1; }
