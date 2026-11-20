@@ -20,7 +20,7 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 
 ```
 dashboards/
-├── ahd/         cluster baseline: argocd, infra, keycloak
+├── ahd/         cluster baseline: argocd, infra, keycloak, node-exporter
 ├── databases/   mongodb, postgresql
 └── grain/       platform services: as400proxy, restapi, services
 ```
@@ -39,7 +39,7 @@ Both formats accepted by Grafana are in use:
 | Format | Identifier | Files |
 |---|---|---|
 | v2 resource (`apiVersion: dashboard.grafana.app/v2`) | `metadata.name` | argocd, as400proxy, infra, restapi, services |
-| classic JSON | `uid` | keycloak, mongodb, postgresql |
+| classic JSON | `uid` | keycloak, mongodb, node-exporter, postgresql |
 
 The identifier must be unique and must never change: Grafana uses it to match the dashboard across updates.
 
