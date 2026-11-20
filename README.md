@@ -25,8 +25,7 @@ dashboards/
 └── grain/       platform services: as400proxy, restapi, services
 ```
 
-Moving or renaming a file changes its URL: update the list in the `commons` chart
-(`charts/commons/templates/grafana/dashboard-cm.yaml`) in the same release.
+Each subfolder becomes a Grafana folder. Adding, moving or renaming dashboards needs no change in the `commons` chart.
 
 Alert rules still live in the `commons` chart of [smeup/helm-charts](https://github.com/smeup/helm-charts)
 (`charts/commons/alerts/`), because Git Sync supports only dashboards and folders for now.
@@ -45,21 +44,21 @@ The identifier must be unique and must never change: Grafana uses it to match th
 
 ## How Grafana consumes this repository
 
-The repository is public, so no token is needed to read it.
+Grafana pulls `dashboards/` from `main` with **Git Sync** (Grafana 13+), configured by the `commons` chart (`grafana.gitSync`):
+a read-only `Repository` (`type: git`, `workflows: []`, `target: folderless`).
+The repository is public, so no token is needed.
 
-- **Raw URL** (used by the `commons` chart): one ConfigMap per dashboard with a
-  `<file>.json.url` key pointing to
-  `https://raw.githubusercontent.com/smeup/KS_200-observability/main/dashboards/<folder>/<file>.json`.
-  The Grafana dashboard sidecar downloads it when the ConfigMap is created or the Grafana pod starts.
-- **Git Sync** (Grafana 13+), read-only: a `Repository` resource with `workflows: []` and `path: dashboards/`.
+- Grafana pulls every 24 hours (`grafana.gitSync.intervalSeconds`).
+- To get a merge on `main` immediately: **Administration → Provisioning → Repositories → Platform dashboards → Pull**.
+- Dashboards synced from Git cannot be saved from the Grafana UI: change them here.
 
 ## Changing a dashboard
 
-1. Edit the dashboard in Grafana.
+1. Edit the dashboard in Grafana (as a copy, or on a test instance).
 2. Export it: **Share → Export → Save to file**, with *Export for sharing externally* **off**
    (keeps datasource UIDs, no `${DS_...}` inputs).
 3. Replace the file under `dashboards/` and open a pull request to `develop`.
 
-Changes made only in the Grafana UI are lost on the next sync or restart.
+Merged changes reach Grafana at the next pull (see above).
 
 CI (`.github/workflows/validate.yaml`) checks that every dashboard is valid JSON with a unique identifier.
