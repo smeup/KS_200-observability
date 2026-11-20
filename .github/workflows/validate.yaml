@@ -15,7 +15,7 @@ jobs:
         run: |
           set -eu
           ids=""
-          for f in dashboards/*.json; do
+          for f in $(find dashboards -name "*.json" | sort); do
             jq empty "$f" || { echo "::error file=$f::invalid JSON"; exit 1; }
             # v2 resources are identified by metadata.name, classic dashboards by uid
             id=$(jq -r '.metadata.name // .uid // empty' "$f")

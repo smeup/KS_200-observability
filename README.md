@@ -19,8 +19,14 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 ## Layout
 
 ```
-dashboards/   Grafana dashboards (JSON)
+dashboards/
+├── ahd/         cluster baseline: argocd, infra, keycloak
+├── databases/   mongodb, postgresql
+└── grain/       platform services: as400proxy, restapi, services
 ```
+
+Moving or renaming a file changes its URL: update the list in the `commons` chart
+(`charts/commons/templates/grafana/dashboard-cm.yaml`) in the same release.
 
 Alert rules still live in the `commons` chart of [smeup/helm-charts](https://github.com/smeup/helm-charts)
 (`charts/commons/alerts/`), because Git Sync supports only dashboards and folders for now.
@@ -41,9 +47,10 @@ The identifier must be unique and must never change: Grafana uses it to match th
 
 The repository is public, so no token is needed to read it.
 
-- **Raw URL** (Grafana Helm chart `dashboards.<provider>.<name>.url`):
-  `https://raw.githubusercontent.com/smeup/KS_200-observability/main/dashboards/<file>.json`.
-  Dashboards are downloaded when the Grafana pod starts.
+- **Raw URL** (used by the `commons` chart): one ConfigMap per dashboard with a
+  `<file>.json.url` key pointing to
+  `https://raw.githubusercontent.com/smeup/KS_200-observability/main/dashboards/<folder>/<file>.json`.
+  The Grafana dashboard sidecar downloads it when the ConfigMap is created or the Grafana pod starts.
 - **Git Sync** (Grafana 13+), read-only: a `Repository` resource with `workflows: []` and `path: dashboards/`.
 
 ## Changing a dashboard
@@ -51,7 +58,7 @@ The repository is public, so no token is needed to read it.
 1. Edit the dashboard in Grafana.
 2. Export it: **Share → Export → Save to file**, with *Export for sharing externally* **off**
    (keeps datasource UIDs, no `${DS_...}` inputs).
-3. Replace the file in `dashboards/` and open a pull request.
+3. Replace the file under `dashboards/` and open a pull request to `develop`.
 
 Changes made only in the Grafana UI are lost on the next sync or restart.
 
