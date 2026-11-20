@@ -5,17 +5,14 @@ This repository is the **source of truth**: every Grafana instance that points h
 
 ## Branches
 
-Same model as [smeup/helm-charts](https://github.com/smeup/helm-charts):
-
 | Branch | Purpose |
 |---|---|
-| `main` | What Grafana instances consume. Changes only through a `release/*` PR. |
+| `main` | What Grafana instances consume. Updated only by a PR `develop` → `main`. |
 | `develop` | Default branch, integration. `feature/*`, `fix/*`, `chore/*` branch from it and merge back via PR. |
-| `release/*` | Branch from `develop`, PR to `main`. |
 
-After a merge into `main`, CI opens `sync/main-into-develop` → `develop`.
-Merge it (and the `release/*` → `main` PR) with **Create a merge commit**, never squash or rebase,
-so that `main` stays an ancestor of `develop`.
+Changes flow one way only, `develop` → `main`: `main` is never edited directly and never merged back.
+Merge the `develop` → `main` PR with **Create a merge commit**, not squash,
+otherwise the next `develop` → `main` PR shows already released changes again.
 
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `docs:`).
 
